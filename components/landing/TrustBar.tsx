@@ -11,17 +11,17 @@ export function TrustBar() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.55 }}
-        className="mx-auto max-w-7xl rounded-[2rem] border border-white/10 bg-white/[0.045] px-6 py-7 backdrop-blur"
+        className="mx-auto max-w-7xl rounded-[2rem] border border-[#244566]/10 bg-[#244566] px-6 py-7 shadow-sm"
       >
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <p className="max-w-sm text-sm font-medium uppercase tracking-[0.26em] text-white/45">
-            Built for modern enterprise teams evaluating AI responsibly
+        <div className="flex flex-col gap-5">
+          <p className="mx-auto max-w-3xl text-center text-sm font-semibold uppercase tracking-[0.26em] text-white">
+            Nearly 20 years helping organizations evolve through technology, process, and people
           </p>
-          <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {companyLogos.map((company) => (
               <div
                 key={company}
-                className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3 text-center text-sm font-semibold text-white/50 transition hover:border-cyan-200/25 hover:text-white"
+                className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-center text-sm font-semibold text-white transition hover:border-[#1BA38E]/60 hover:bg-white hover:text-[#244566]"
               >
                 {company}
               </div>

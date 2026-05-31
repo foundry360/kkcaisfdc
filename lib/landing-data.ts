@@ -1,29 +1,29 @@
-export const companyLogos = ["Northstar", "Aperture", "Vector", "Helio", "Summit"];
+export const companyLogos = ["Healthcare", "Distribution", "Telecom", "Public Sector", "Startups"];
 
 export const valueCards = [
   {
-    eyebrow: "Evaluate",
-    title: "Measure AI maturity across the business",
+    eyebrow: "Assess",
+    title: "AI readiness across people, process, and data",
     description:
-      "Benchmark strategy, data quality, operating model, governance, and adoption readiness in minutes."
+      "Establish a clear baseline for how work happens today, where AI is already visible, and what needs to be strengthened before scale."
   },
   {
-    eyebrow: "Prioritize",
-    title: "Surface the highest-value opportunities",
+    eyebrow: "Align",
+    title: "Tie AI opportunities to measurable business outcomes",
     description:
-      "Understand where AI can improve productivity, decision speed, customer experience, and margin."
+      "Prioritize use cases that improve human connection, operational efficiency, customer experience, and performance."
   },
   {
-    eyebrow: "De-risk",
-    title: "Identify gaps before pilots stall",
+    eyebrow: "Govern",
+    title: "Reveal the risks that stall responsible AI adoption",
     description:
-      "Spot governance, tooling, process, and talent risks that prevent AI initiatives from scaling."
+      "Identify gaps in governance, change management, data quality, security, and ownership before pilots become expensive detours."
   },
   {
-    eyebrow: "Act",
-    title: "Receive a practical readiness roadmap",
+    eyebrow: "Evolve",
+    title: "Move from experimentation to executable roadmaps",
     description:
-      "Get a score, recommended next steps, and a clearer path from exploration to business impact."
+      "Receive a readiness score and practical next steps grounded in Kona Kai's business-first transformation approach."
   }
 ];
 
@@ -31,32 +31,32 @@ export const howItWorksSteps = [
   {
     step: "01",
     title: "Enter your info",
-    description: "Tell us who you are so your readiness report can be personalized."
+    description: "Share your details so Kona Kai can personalize the assessment around your organization."
   },
   {
     step: "02",
     title: "Complete assessment",
-    description: "Answer focused questions about strategy, data, teams, and controls."
+    description: "Answer focused questions about decisions, workflows, data, platforms, governance, and adoption."
   },
   {
     step: "03",
     title: "Get your AI score",
-    description: "Receive your readiness score, insights, and recommended roadmap."
+    description: "Receive a readiness score, insights, and a practical path toward responsible AI execution."
   }
 ];
 
 export const previewCategories = [
-  "AI strategy and executive alignment",
-  "Data infrastructure and access",
-  "Workflow automation opportunities",
+  "Business strategy and executive alignment",
+  "Day-in-the-life workflow friction",
+  "Data movement, quality, and access",
   "Governance, risk, and responsible AI",
-  "Team enablement and adoption"
+  "Platform readiness and intelligent automation"
 ];
 
 export const sampleQuestions = [
-  "Where are teams already using AI in daily work?",
-  "How mature are your data access and quality controls?",
-  "Which workflows have the clearest automation upside?"
+  "Where are decisions slowed by fragmented processes or unclear ownership?",
+  "How reliably does data move across the systems your teams use every day?",
+  "Which workflows could benefit from AI without creating governance or adoption risk?"
 ];
 
-export const footerLinks = ["Privacy", "Terms", "Contact"];
+export const footerLinks = ["Services", "Who We Are", "Contact"];

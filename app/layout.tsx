@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Readiness Assessment | KKC AI",
+  title: "AI Readiness Assessment | Kona Kai Corporation",
   description:
-    "Evaluate your organization's AI maturity, identify operational gaps, and receive a practical readiness roadmap."
+    "Validate your organization's AI readiness across people, processes, platforms, data, and governance with Kona Kai Corporation."
 };
 
 export default function RootLayout({

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import type { LeadCaptureValues } from "@/lib/types";
-import { SectionBadge } from "./SectionBadge";
 
 const fields: Array<{
   name: keyof LeadCaptureValues;
@@ -35,7 +34,7 @@ const fields: Array<{
     name: "company",
     label: "Company",
     type: "text",
-    placeholder: "Northstar Analytics"
+    placeholder: "Acme Health Partners"
   },
   {
     name: "address",
@@ -78,28 +77,27 @@ export function LeadCaptureForm() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: 0.55 }}
-          className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-cyan-300/12 via-white/[0.05] to-fuchsia-400/10 p-8 shadow-2xl shadow-cyan-950/20 backdrop-blur lg:p-10"
+          className="rounded-[2rem] border border-[#173244]/10 bg-[#f8fafc] p-8 shadow-sm lg:p-10"
         >
-          <SectionBadge>Start with your contact information</SectionBadge>
-          <h2 className="mt-7 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
-            Unlock your AI readiness score in one focused assessment.
+          <h2 className="text-4xl font-semibold tracking-[-0.015em] text-[#173244] sm:text-5xl">
+            Begin your evolution with a readiness baseline.
           </h2>
-          <p className="mt-5 text-lg leading-8 text-slate-300">
-            We collect your details first so the assessment can generate a personalized profile,
-            route recommendations to the right team, and support a future report delivery workflow.
+          <p className="mt-5 text-lg leading-8 text-[#4f646d]">
+            Kona Kai collects your details first so the assessment can be personalized around your
+            organization and prepared for follow-up guidance from an experienced consulting team.
           </p>
-          <div className="mt-8 rounded-3xl border border-white/10 bg-black/20 p-5">
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-100/60">
+          <div className="mt-8 rounded-3xl border border-[#173244]/10 bg-white p-5 shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#1ba38e]">
               What happens next
             </p>
-            <ul className="mt-5 space-y-4 text-slate-300">
+            <ul className="mt-5 space-y-4 text-[#4f646d]">
               {[
                 "Your profile is saved locally for this session.",
                 "You are routed directly into the assessment flow.",
-                "Backend/API integration can be connected at this submission point."
+                "A future API can send submissions to Kona Kai's CRM or intake workflow."
               ].map((item) => (
                 <li key={item} className="flex gap-3">
-                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-cyan-300" />
+                  <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#1BA38E]" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -113,7 +111,7 @@ export function LeadCaptureForm() {
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 0.55, delay: 0.08 }}
           onSubmit={handleSubmit(onSubmit)}
-          className="rounded-[2rem] border border-white/10 bg-white/[0.055] p-6 shadow-2xl shadow-slate-950/25 backdrop-blur md:p-8"
+          className="rounded-[2rem] border border-[#173244]/10 bg-white p-6 shadow-xl shadow-[#173244]/10 md:p-8"
         >
           <div className="grid gap-5 md:grid-cols-2">
             {fields.map((field) => {
@@ -140,16 +138,16 @@ export function LeadCaptureForm() {
                   key={field.name}
                   className={field.name === "address" ? "md:col-span-2" : undefined}
                 >
-                  <span className="text-sm font-medium text-white/75">{field.label}</span>
+                  <span className="text-sm font-semibold text-[#173244]">{field.label}</span>
                   <input
                     type={field.type}
                     placeholder={field.placeholder}
                     aria-invalid={Boolean(message)}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/45 px-4 py-4 text-white outline-none transition placeholder:text-white/30 focus:border-cyan-200/50 focus:bg-slate-950/70 focus:ring-4 focus:ring-cyan-300/10"
+                    className="mt-2 w-full rounded-2xl border border-[#173244]/12 bg-[#f3f4f6] px-4 py-4 text-[#173244] outline-none transition placeholder:text-[#8a979c] focus:border-[#2c6f7c]/50 focus:bg-white focus:ring-4 focus:ring-[#2c6f7c]/10"
                     {...register(field.name, validation)}
                   />
                   {message ? (
-                    <span className="mt-2 block text-sm text-rose-200">{message}</span>
+                    <span className="mt-2 block text-sm text-rose-700">{message}</span>
                   ) : null}
                 </label>
               );
@@ -159,11 +157,11 @@ export function LeadCaptureForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-7 inline-flex w-full items-center justify-center rounded-full bg-cyan-300 px-7 py-4 text-base font-bold text-slate-950 shadow-[0_18px_60px_rgba(34,211,238,0.22)] transition hover:-translate-y-0.5 hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-7 inline-flex w-full items-center justify-center rounded-full bg-[#244566] px-7 py-4 text-base font-bold text-white shadow-lg shadow-[#244566]/20 transition hover:-translate-y-0.5 hover:bg-[#315a83] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isSubmitting ? "Preparing Assessment..." : "Start Your Assessment"}
           </button>
-          <p className="mt-4 text-center text-sm text-white/45">
+          <p className="mt-4 text-center text-sm text-[#6f7f86]">
             {leadSnapshot
               ? `Preparing a personalized flow for ${leadSnapshot.company}.`
               : "No spam. No backend submission yet. Your data stays in this browser session."}
