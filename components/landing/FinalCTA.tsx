@@ -16,7 +16,7 @@ export function FinalCTA() {
         <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#1ba38e]">
           Ready to validate your AI maturity?
         </p>
-        <h2 className="mx-auto mt-5 max-w-3xl text-4xl font-semibold tracking-[-0.015em] text-white sm:text-6xl">
+        <h2 className="mx-auto mt-5 max-w-3xl text-3xl font-semibold leading-tight tracking-[0.02em] text-white sm:text-4xl">
           Turn AI ambition into an executable roadmap.
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-white/75">

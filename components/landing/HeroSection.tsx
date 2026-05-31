@@ -44,7 +44,7 @@ export function HeroSection() {
           transition={{ duration: 0.7, ease: "easeOut" }}
           className="max-w-4xl"
         >
-          <h1 className="max-w-5xl text-5xl font-semibold tracking-[-0.025em] text-[#173244] sm:text-6xl lg:text-7xl">
+          <h1 className="max-w-5xl text-4xl font-semibold tracking-[0.015em] text-[#244566] sm:text-5xl lg:text-6xl">
             Start an evolution toward responsible AI execution.
           </h1>
           <p className="mt-7 max-w-2xl text-lg font-light leading-8 text-[#4f646d] sm:text-xl">

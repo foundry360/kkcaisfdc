@@ -62,7 +62,7 @@ export function AssessmentShell() {
               <p className="text-sm font-semibold uppercase tracking-[0.28em] text-[#2c6f7c]">
                 AI Readiness Assessment
               </p>
-              <h1 className="mt-5 text-4xl font-semibold tracking-[-0.015em] text-[#173244] sm:text-6xl">
+              <h1 className="mt-5 text-4xl font-semibold tracking-[-0.015em] text-[#244566] sm:text-6xl">
                 {lead ? `Welcome, ${lead.firstName}.` : "Your assessment is ready."}
               </h1>
               <p className="mt-5 text-lg leading-8 text-[#4f646d]">

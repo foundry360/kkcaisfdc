@@ -1,0 +1,4 @@
+.env*
+salesforce/jwt/
+node_modules/
+.next/

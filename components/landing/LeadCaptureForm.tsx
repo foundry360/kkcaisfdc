@@ -47,6 +47,7 @@ const fields: Array<{
 export function LeadCaptureForm() {
   const router = useRouter();
   const [leadSnapshot, setLeadSnapshot] = useState<LeadCaptureValues | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -62,11 +63,31 @@ export function LeadCaptureForm() {
   });
 
   const onSubmit = async (data: LeadCaptureValues) => {
-    setLeadSnapshot(data);
+    setSubmissionError(null);
 
-    // Temporary client-side persistence keeps the next route ready for API integration later.
-    window.sessionStorage.setItem("ai-readiness-lead", JSON.stringify(data));
-    router.push("/assessment");
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = (await response.json()) as { message?: string };
+
+      if (!response.ok) {
+        throw new Error(result.message ?? "Unable to start your assessment.");
+      }
+
+      setLeadSnapshot(data);
+      window.sessionStorage.setItem("ai-readiness-lead", JSON.stringify(data));
+      router.push("/assessment");
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error ? error.message : "Unable to start your assessment."
+      );
+    }
   };
 
   return (
@@ -79,7 +100,7 @@ export function LeadCaptureForm() {
           transition={{ duration: 0.55 }}
           className="rounded-[2rem] border border-[#173244]/10 bg-[#f8fafc] p-8 shadow-sm lg:p-10"
         >
-          <h2 className="text-4xl font-semibold tracking-[-0.015em] text-[#173244] sm:text-5xl">
+          <h2 className="text-3xl font-semibold leading-tight tracking-[0.02em] text-[#244566] sm:text-4xl">
             Begin your evolution with a readiness baseline.
           </h2>
           <p className="mt-5 text-lg leading-8 text-[#4f646d]">
@@ -164,8 +185,13 @@ export function LeadCaptureForm() {
           <p className="mt-4 text-center text-sm text-[#6f7f86]">
             {leadSnapshot
               ? `Preparing a personalized flow for ${leadSnapshot.company}.`
-              : "No spam. No backend submission yet. Your data stays in this browser session."}
+              : "Your details submit securely to the backend before the assessment starts."}
           </p>
+          {submissionError ? (
+            <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-center text-sm font-medium text-rose-700">
+              {submissionError}
+            </p>
+          ) : null}
         </motion.form>
       </div>
     </section>

@@ -1,0 +1,11 @@
+{
+  "packageDirectories": [
+    {
+      "path": "salesforce",
+      "default": true
+    }
+  ],
+  "name": "kkc-ai-sf",
+  "namespace": "",
+  "sourceApiVersion": "66.0"
+}

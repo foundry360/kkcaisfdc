@@ -8,7 +8,7 @@ export function ValueProposition() {
     <section id="value" className="px-6 py-20 sm:px-8 lg:px-12">
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-5xl text-center">
-          <h2 className="text-4xl font-semibold tracking-[-0.015em] text-[#173244] sm:text-5xl">
+          <h2 className="text-3xl font-semibold leading-tight tracking-[0.02em] text-[#244566] sm:text-4xl">
             A practical assessment built for transformation leaders, not technology theater.
           </h2>
           <p className="mt-5 text-lg leading-8 text-[#4f646d]">

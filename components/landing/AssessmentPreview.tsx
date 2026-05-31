@@ -13,7 +13,7 @@ export function AssessmentPreview() {
           viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: 0.55 }}
         >
-          <h2 className="text-4xl font-semibold tracking-[-0.015em] text-[#173244] sm:text-5xl">
+          <h2 className="text-3xl font-semibold leading-tight tracking-[0.02em] text-[#244566] sm:text-4xl">
             Business-first prompts that examine how work really happens.
           </h2>
           <p className="mt-5 text-lg leading-8 text-[#4f646d]">

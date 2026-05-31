@@ -9,7 +9,7 @@ export function HowItWorks() {
       <div className="mx-auto max-w-7xl rounded-[2rem] border border-[#244566]/10 bg-[#244566] p-6 shadow-sm md:p-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="max-w-5xl">
-            <h2 className="text-4xl font-semibold tracking-[-0.015em] text-white sm:text-5xl">
+            <h2 className="text-3xl font-semibold leading-tight tracking-[0.02em] text-white sm:text-4xl">
               Three focused steps from contact to clarity.
             </h2>
           </div>
