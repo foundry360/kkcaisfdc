@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -11,6 +11,9 @@ import {
 
 let cachedResult: AssessmentResultPayload | null = null;
 let cachedResultJson: string | null = null;
+const discoveryBookingUrl =
+  process.env.NEXT_PUBLIC_DISCOVERY_BOOKING_URL ??
+  "https://outlook.office.com/book/AIReadinessDiscoveries@konakaicorp.com/?ismsaljsauthenabled";
 
 const sampleResult: AssessmentResultPayload = {
   lead: {
@@ -255,6 +258,7 @@ function getRecommendationLabel(recommendation: string) {
 
 export function AssessmentResults() {
   const storedResult = useSyncExternalStore(subscribeToResultsStore, getStoredResult, () => null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const result = storedResult ?? sampleResult;
   const isSampleResult = !storedResult;
 
@@ -441,12 +445,13 @@ export function AssessmentResults() {
               Kona Kai can validate these findings with stakeholders, review supporting evidence, and
               convert the roadmap into an execution plan.
             </p>
-            <Link
-              href="/"
+            <button
+              type="button"
+              onClick={() => setIsBookingModalOpen(true)}
               className="mt-5 inline-flex rounded-full bg-[#1BA38E] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#158a79]"
             >
               Schedule discovery
-            </Link>
+            </button>
           </div>
 
           <div className="rounded-[1.5rem] border border-[#173244]/10 bg-white p-4 text-xs leading-5 text-[#6f7f86] shadow-sm">
@@ -458,6 +463,98 @@ export function AssessmentResults() {
           </div>
         </div>
       </motion.section>
+      {isBookingModalOpen ? (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-[#173244]/55 px-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="booking-modal-title"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.22 }}
+            className="w-full max-w-4xl overflow-hidden rounded-[2rem] border border-white/40 bg-white shadow-2xl shadow-[#173244]/25"
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[#173244]/10 p-5">
+              <a href="https://konakaicorp.com" aria-label="Kona Kai Corporation home">
+                <Image
+                  src="/kona-kai-logo.png"
+                  alt="Kona Kai Corporation"
+                  width={238}
+                  height={40}
+                  priority
+                  className="h-8 w-auto"
+                />
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsBookingModalOpen(false)}
+                aria-label="Close scheduling modal"
+                className="grid h-9 w-9 place-items-center rounded-full bg-[#f3f4f6] text-[#244566] transition hover:bg-[#e5e7eb]"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[0.56fr_0.44fr] lg:items-center">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1BA38E]">
+                  Schedule Discovery
+                </p>
+                <h2
+                  id="booking-modal-title"
+                  className="mt-3 text-4xl font-semibold leading-tight tracking-[0.015em] text-[#244566]"
+                >
+                  Plan your AI readiness discovery.
+                </h2>
+                <p className="mt-5 text-base leading-7 text-[#4f646d]">
+                  You are leaving the assessment report to choose a discovery time with Kona Kai.
+                  Your results have already been captured for follow-up.
+                </p>
+                <div className="mt-8 grid gap-3">
+                  <a
+                    href={discoveryBookingUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex w-full justify-center rounded-full bg-[#1BA38E] px-7 py-4 text-base font-bold text-white shadow-lg shadow-[#1BA38E]/20 transition hover:-translate-y-0.5 hover:bg-[#158a79]"
+                  >
+                    Schedule Session
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setIsBookingModalOpen(false)}
+                    className="inline-flex w-full justify-center rounded-full border border-[#173244]/10 bg-white px-7 py-4 text-base font-semibold text-[#173244] transition hover:border-[#1BA38E]/45 hover:bg-[#f8fafc]"
+                  >
+                    Back to results
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] bg-[#244566] p-6 text-white shadow-xl shadow-[#244566]/20">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1BA38E]">
+                  What happens next
+                </p>
+                <h3 className="mt-2 text-2xl font-semibold tracking-[0.015em]">
+                  Your discovery session is focused on action.
+                </h3>
+                <ul className="mt-5 grid gap-4 text-sm leading-6 text-white/80">
+                  {[
+                    "Review your readiness score and domain findings.",
+                    "Validate the highest-priority governance and execution gaps.",
+                    "Map next steps into a focused 30, 60, and 90 day plan."
+                  ].map((item) => (
+                    <li key={item} className="flex gap-3">
+                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#1BA38E]" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      ) : null}
     </main>
   );
 }

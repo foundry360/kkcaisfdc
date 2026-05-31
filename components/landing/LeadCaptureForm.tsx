@@ -131,7 +131,7 @@ export function LeadCaptureForm() {
               {[
                 "Your profile is saved locally for this session.",
                 "You are routed directly into the assessment flow.",
-                "A future API can send submissions to Kona Kai's CRM or intake workflow."
+                "Your responses help Kona Kai prepare focused follow-up guidance."
               ].map((item) => (
                 <li key={item} className="flex gap-3">
                   <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#1BA38E]" />
@@ -199,9 +199,8 @@ export function LeadCaptureForm() {
             {isSubmitting ? "Preparing Assessment..." : "Start Your Assessment"}
           </button>
           <p className="mt-4 text-center text-sm text-[#6f7f86]">
-            {leadSnapshot
-              ? `Preparing a personalized flow for ${leadSnapshot.company}.`
-              : "Your details submit securely to the backend before the assessment starts."}
+            Use business context only. Please avoid sharing confidential, regulated, or sensitive
+            information in your responses.
           </p>
           {submissionError ? (
             <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-center text-sm font-medium text-rose-700">
