@@ -11,7 +11,10 @@ const montserrat = Montserrat({
 export const metadata: Metadata = {
   title: "AI Readiness Assessment | Kona Kai Corporation",
   description:
-    "Validate your organization's AI readiness across people, processes, platforms, data, and governance with Kona Kai Corporation."
+    "Validate your organization's AI readiness across people, processes, platforms, data, and governance with Kona Kai Corporation.",
+  icons: {
+    icon: "/favicon.png"
+  }
 };
 
 export default function RootLayout({
