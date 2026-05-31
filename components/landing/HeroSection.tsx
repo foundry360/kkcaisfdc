@@ -7,8 +7,12 @@ export function HeroSection() {
   return (
     <section className="relative isolate overflow-hidden px-6 py-8 sm:px-8 lg:px-12">
       <div className="absolute inset-0 -z-10 noise-overlay opacity-60" />
-      <div className="mx-auto flex max-w-7xl items-center justify-between rounded-full border border-[#173244]/10 bg-white/90 p-3 shadow-sm backdrop-blur md:p-4">
-        <a href="#" className="flex items-center" aria-label="Kona Kai Corporation home">
+      <div className="mx-auto flex max-w-[86rem] items-center justify-between rounded-full border border-[#173244]/10 bg-white/90 p-3 shadow-sm backdrop-blur md:p-4">
+        <a
+          href="https://konakaicorp.com"
+          className="flex items-center"
+          aria-label="Kona Kai Corporation home"
+        >
           <Image
             src="/kona-kai-logo.png"
             alt="Kona Kai Corporation"

@@ -74,3 +74,11 @@ h3 {
   -webkit-mask-image: radial-gradient(circle at center, black, transparent 70%);
   mask-image: radial-gradient(circle at center, black, transparent 70%);
 }
+
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}

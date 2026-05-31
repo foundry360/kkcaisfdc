@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
+import {
+  getAssessmentAttemptCount,
+  maxAssessmentAttemptsPerUser
+} from "@/lib/assessment-results";
 import type { LeadCaptureValues } from "@/lib/types";
 
 const fields: Array<{
@@ -65,6 +69,13 @@ export function LeadCaptureForm() {
   const onSubmit = async (data: LeadCaptureValues) => {
     setSubmissionError(null);
 
+    if (getAssessmentAttemptCount(data.email) >= maxAssessmentAttemptsPerUser) {
+      setSubmissionError(
+        "This email has already completed the AI readiness assessment twice. Please contact Kona Kai for a deeper dive assessment."
+      );
+      return;
+    }
+
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
@@ -74,14 +85,19 @@ export function LeadCaptureForm() {
         body: JSON.stringify(data)
       });
 
-      const result = (await response.json()) as { message?: string };
+      const result = (await response.json()) as { message?: string; salesforceLeadId?: string };
 
       if (!response.ok) {
         throw new Error(result.message ?? "Unable to start your assessment.");
       }
 
-      setLeadSnapshot(data);
-      window.sessionStorage.setItem("ai-readiness-lead", JSON.stringify(data));
+      const leadWithSalesforceId: LeadCaptureValues = {
+        ...data,
+        salesforceLeadId: result.salesforceLeadId
+      };
+
+      setLeadSnapshot(leadWithSalesforceId);
+      window.sessionStorage.setItem("ai-readiness-lead", JSON.stringify(leadWithSalesforceId));
       router.push("/assessment");
     } catch (error) {
       setSubmissionError(

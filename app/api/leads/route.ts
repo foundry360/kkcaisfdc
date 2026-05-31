@@ -5,6 +5,7 @@ import type { LeadCaptureValues } from "@/lib/types";
 type LeadApiResponse = {
   ok: boolean;
   mode: "salesforce" | "not_configured";
+  salesforceStatus?: "created" | "updated";
   salesforceLeadId?: string;
   message?: string;
 };
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
     return NextResponse.json<LeadApiResponse>({
       ok: true,
       mode: "salesforce",
+      salesforceStatus: salesforceResult.status,
       salesforceLeadId: salesforceResult.id
     });
   } catch (error) {

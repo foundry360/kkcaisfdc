@@ -1,6 +1,7 @@
 import { createSign } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 
+import type { AssessmentResultPayload } from "@/lib/assessment-results";
 import type { LeadCaptureValues } from "@/lib/types";
 
 type SalesforceTokenResponse = {
@@ -14,10 +15,24 @@ type SalesforceCreateResponse = {
   errors: unknown[];
 };
 
+type SalesforceQueryResponse<T> = {
+  records: T[];
+};
+
 export type SalesforceLeadResult =
   | {
-      status: "created";
+      status: "created" | "updated";
       id: string;
+    }
+  | {
+      status: "not_configured";
+    };
+
+export type SalesforceAssessmentResult =
+  | {
+      status: "created";
+      taskId: string;
+      contentDocumentId?: string;
     }
   | {
       status: "not_configured";
@@ -127,13 +142,263 @@ function mapLeadToSalesforce(data: LeadCaptureValues) {
   };
 }
 
+function escapeSoqlString(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+function getApiVersion() {
+  return process.env.SALESFORCE_API_VERSION ?? "v60.0";
+}
+
+async function findExistingLeadByEmail({
+  token,
+  email
+}: {
+  token: SalesforceTokenResponse;
+  email: string;
+}) {
+  const apiVersion = getApiVersion();
+  const query = encodeURIComponent(
+    `SELECT Id FROM Lead WHERE Email = '${escapeSoqlString(email)}' AND IsConverted = false ORDER BY LastModifiedDate DESC LIMIT 1`
+  );
+  const response = await fetch(`${token.instance_url}/services/data/${apiVersion}/query?q=${query}`, {
+    headers: {
+      Authorization: `Bearer ${token.access_token}`
+    },
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`Salesforce lead lookup failed: ${message}`);
+  }
+
+  const result = (await response.json()) as SalesforceQueryResponse<{ Id: string }>;
+
+  return result.records[0]?.Id ?? null;
+}
+
+async function updateSalesforceLead({
+  token,
+  leadId,
+  data
+}: {
+  token: SalesforceTokenResponse;
+  leadId: string;
+  data: LeadCaptureValues;
+}) {
+  const apiVersion = getApiVersion();
+  const response = await fetch(`${token.instance_url}/services/data/${apiVersion}/sobjects/Lead/${leadId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token.access_token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(mapLeadToSalesforce(data)),
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`Salesforce lead update failed: ${message}`);
+  }
+}
+
+function formatAssessmentDescription(result: AssessmentResultPayload) {
+  const leadName = [result.lead?.firstName, result.lead?.lastName].filter(Boolean).join(" ");
+  const domainSections = result.summary.domainBreakdowns
+    .map(
+      (domain) => `Domain: ${domain.category}
+Score: ${domain.score}/100
+Finding: ${domain.finding}
+Recommended Actions:
+${domain.recommendations.map((recommendation) => `- ${recommendation}`).join("\n")}`
+    )
+    .join("\n\n");
+  const roadmap = result.summary.roadmap
+    .map(
+      (item) => `${item.priority}: ${item.focus}
+${item.actions.map((action) => `- ${action}`).join("\n")}`
+    )
+    .join("\n\n");
+
+  return `AI Readiness Assessment Completed
+
+Contact: ${leadName || "Unknown"}
+Company: ${result.lead?.company ?? "Unknown"}
+Email: ${result.lead?.email ?? "Unknown"}
+Completed At: ${result.completedAt}
+
+Overall Readiness: ${result.readinessLabel}
+Overall Score: ${result.score}/100
+
+Summary:
+${result.summary.summary}
+
+Overview:
+${result.summary.overview}
+
+Key Recommended Actions:
+${result.summary.recommendations.map((recommendation) => `- ${recommendation}`).join("\n")}
+
+Domain Breakdown:
+${domainSections}
+
+Prioritized Roadmap:
+${roadmap}
+
+How results are determined:
+This preliminary assessment is based on the maturity options selected, any rationale provided, the target score for each question, and the criticality weighting assigned to each control area. The output is intended to guide discovery and prioritization, not to serve as a formal audit, certification, or compliance determination.
+
+Raw Assessment Responses:
+${result.answers.map((answer) => `- ${answer.questionId}: ${answer.label} (${answer.value}/5)${answer.evidence ? `, rationale: ${answer.evidence}` : ""}`).join("\n")}`;
+}
+
+function mapAssessmentToSalesforceTask(result: AssessmentResultPayload) {
+  return {
+    Subject: process.env.SALESFORCE_ASSESSMENT_TASK_SUBJECT ?? "AI Readiness Assessment Completed",
+    Status: "Completed",
+    Priority: "Normal",
+    Description: formatAssessmentDescription(result).slice(0, 32000),
+    ...(result.lead?.salesforceLeadId ? { WhoId: result.lead.salesforceLeadId } : {})
+  };
+}
+
+function getAssessmentPdfTitle(result: AssessmentResultPayload) {
+  const companyOrName =
+    result.lead?.company ??
+    [result.lead?.firstName, result.lead?.lastName].filter(Boolean).join(" ") ??
+    "Assessment";
+
+  return `AI Readiness Assessment - ${companyOrName}`;
+}
+
+async function uploadPdfToSalesforce({
+  token,
+  result,
+  pdfBuffer
+}: {
+  token: SalesforceTokenResponse;
+  result: AssessmentResultPayload;
+  pdfBuffer: Buffer;
+}) {
+  const apiVersion = getApiVersion();
+  const title = getAssessmentPdfTitle(result);
+  const contentVersionResponse = await fetch(
+    `${token.instance_url}/services/data/${apiVersion}/sobjects/ContentVersion`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token.access_token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        Title: title,
+        PathOnClient: `${title.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase()}.pdf`,
+        VersionData: pdfBuffer.toString("base64")
+      }),
+      cache: "no-store"
+    }
+  );
+
+  if (!contentVersionResponse.ok) {
+    const message = await contentVersionResponse.text();
+    throw new Error(`Salesforce PDF upload failed: ${message}`);
+  }
+
+  const contentVersionResult = (await contentVersionResponse.json()) as SalesforceCreateResponse;
+
+  if (!contentVersionResult.success) {
+    throw new Error(`Salesforce PDF upload failed: ${JSON.stringify(contentVersionResult.errors)}`);
+  }
+
+  const query = encodeURIComponent(
+    `SELECT ContentDocumentId FROM ContentVersion WHERE Id = '${contentVersionResult.id}'`
+  );
+  const queryResponse = await fetch(`${token.instance_url}/services/data/${apiVersion}/query?q=${query}`, {
+    headers: {
+      Authorization: `Bearer ${token.access_token}`
+    },
+    cache: "no-store"
+  });
+
+  if (!queryResponse.ok) {
+    const message = await queryResponse.text();
+    throw new Error(`Salesforce PDF lookup failed: ${message}`);
+  }
+
+  const queryResult = (await queryResponse.json()) as SalesforceQueryResponse<{
+    ContentDocumentId: string;
+  }>;
+  const contentDocumentId = queryResult.records[0]?.ContentDocumentId;
+
+  if (!contentDocumentId) {
+    throw new Error("Salesforce PDF upload did not return a ContentDocumentId.");
+  }
+
+  const linkedEntityId = result.lead?.salesforceLeadId;
+
+  if (!linkedEntityId) {
+    return contentDocumentId;
+  }
+
+  const linkResponse = await fetch(
+    `${token.instance_url}/services/data/${apiVersion}/sobjects/ContentDocumentLink`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token.access_token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ContentDocumentId: contentDocumentId,
+        LinkedEntityId: linkedEntityId,
+        ShareType: "V",
+        Visibility: "AllUsers"
+      }),
+      cache: "no-store"
+    }
+  );
+
+  if (!linkResponse.ok) {
+    const message = await linkResponse.text();
+    throw new Error(`Salesforce PDF link failed: ${message}`);
+  }
+
+  const linkResult = (await linkResponse.json()) as SalesforceCreateResponse;
+
+  if (!linkResult.success) {
+    throw new Error(`Salesforce PDF link failed: ${JSON.stringify(linkResult.errors)}`);
+  }
+
+  return contentDocumentId;
+}
+
 export async function createSalesforceLead(data: LeadCaptureValues): Promise<SalesforceLeadResult> {
   if (!isSalesforceConfigured()) {
     return { status: "not_configured" };
   }
 
   const token = await getAccessToken();
-  const apiVersion = process.env.SALESFORCE_API_VERSION ?? "v60.0";
+  const apiVersion = getApiVersion();
+  const existingLeadId = await findExistingLeadByEmail({
+    token,
+    email: data.email
+  });
+
+  if (existingLeadId) {
+    await updateSalesforceLead({
+      token,
+      leadId: existingLeadId,
+      data
+    });
+
+    return {
+      status: "updated",
+      id: existingLeadId
+    };
+  }
+
   const response = await fetch(`${token.instance_url}/services/data/${apiVersion}/sobjects/Lead`, {
     method: "POST",
     headers: {
@@ -158,5 +423,51 @@ export async function createSalesforceLead(data: LeadCaptureValues): Promise<Sal
   return {
     status: "created",
     id: result.id
+  };
+}
+
+export async function createSalesforceAssessmentTask(
+  result: AssessmentResultPayload,
+  pdfBuffer?: Buffer
+): Promise<SalesforceAssessmentResult> {
+  if (!isSalesforceConfigured()) {
+    return { status: "not_configured" };
+  }
+
+  const token = await getAccessToken();
+  const apiVersion = getApiVersion();
+  const response = await fetch(`${token.instance_url}/services/data/${apiVersion}/sobjects/Task`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token.access_token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(mapAssessmentToSalesforceTask(result)),
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`Salesforce assessment task creation failed: ${message}`);
+  }
+
+  const taskResult = (await response.json()) as SalesforceCreateResponse;
+
+  if (!taskResult.success) {
+    throw new Error(`Salesforce assessment task creation failed: ${JSON.stringify(taskResult.errors)}`);
+  }
+
+  const contentDocumentId = pdfBuffer
+    ? await uploadPdfToSalesforce({
+        token,
+        result,
+        pdfBuffer
+      })
+    : undefined;
+
+  return {
+    status: "created",
+    taskId: taskResult.id,
+    contentDocumentId
   };
 }

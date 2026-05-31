@@ -4,4 +4,5 @@ export type LeadCaptureValues = {
   email: string;
   company: string;
   address: string;
+  salesforceLeadId?: string;
 };
