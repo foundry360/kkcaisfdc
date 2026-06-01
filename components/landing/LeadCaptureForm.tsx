@@ -129,7 +129,7 @@ export function LeadCaptureForm() {
             </p>
             <ul className="mt-5 space-y-4 text-[#4f646d]">
               {[
-                "Your profile is saved locally for this session.",
+                "Your profile helps personalize the assessment experience.",
                 "You are routed directly into the assessment flow.",
                 "Your responses help Kona Kai prepare focused follow-up guidance."
               ].map((item) => (
