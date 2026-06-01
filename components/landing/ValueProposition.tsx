@@ -30,7 +30,7 @@ export function ValueProposition() {
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#1BA38E]">
                 {card.eyebrow}
               </p>
-              <h3 className="mt-5 text-[1.05rem] font-semibold leading-snug tracking-normal text-[#173244]">
+              <h3 className="mt-5 text-[0.95rem] font-semibold leading-snug tracking-normal text-[#173244] xl:text-[1rem]">
                 {card.title}
               </h3>
               <p className="mt-4 leading-7 text-[#4f646d]">{card.description}</p>

@@ -9,7 +9,7 @@ export const valueCards = [
   },
   {
     eyebrow: "Align",
-    title: "Tie AI opportunities to measurable business outcomes",
+    title: "Tie AI initiatives to measurable business outcomes",
     description:
       "Prioritize use cases that improve human connection, operational efficiency, customer experience, and performance."
   },
