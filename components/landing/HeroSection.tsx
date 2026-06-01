@@ -32,6 +32,9 @@ export function HeroSection() {
           <a className="transition hover:text-[#173244]" href="#lead-capture">
             Assessment
           </a>
+          <a className="transition hover:text-[#173244]" href="/assessment/results">
+            Sample Report
+          </a>
         </nav>
         <a
           href="#lead-capture"
