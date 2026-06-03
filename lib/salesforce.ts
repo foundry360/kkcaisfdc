@@ -1,6 +1,7 @@
 import { createSign } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 
+import { assessmentQuestions } from "@/lib/assessment-data";
 import type { AssessmentResultPayload } from "@/lib/assessment-results";
 import type { LeadCaptureValues } from "@/lib/types";
 
@@ -32,6 +33,7 @@ export type SalesforceAssessmentResult =
   | {
       status: "created";
       taskId: string;
+      assessmentRecordId?: string;
       contentDocumentId?: string;
     }
   | {
@@ -44,6 +46,74 @@ const requiredEnvVars = [
 ] as const;
 
 const defaultPrivateKeyPath = "salesforce/jwt/ai-readiness.key";
+const aiReadinessAssessmentObject = "AI_Readiness_Assessment__c";
+const assessmentResponseFieldMaxLength = 300;
+const rawResponseFieldMaxLength = 32768;
+
+const assessmentQuestionSalesforceFields: Record<
+  string,
+  {
+    scoreField: string;
+    responseField: string;
+  }
+> = {
+  "q01-ai-strategy": {
+    scoreField: "Q1_Strategy_Leadership_Score__c",
+    responseField: "Q1_Strategy_Leadership_Response__c"
+  },
+  "q02-governance-group": {
+    scoreField: "Q2_Strategy_Leadership_Score__c",
+    responseField: "Q2_Strategy_Leadership_Response__c"
+  },
+  "q03-ai-policies": {
+    scoreField: "Q3_Policy_Standards_Score__c",
+    responseField: "Q3_Policy_Standards_Response__c"
+  },
+  "q04-risk-assessment-tiering": {
+    scoreField: "Q4_Risk_Mangement_Score__c",
+    responseField: "Q4_Risk_Mangement_Response__c"
+  },
+  "q05-risk-register": {
+    scoreField: "Q5_Risk_Mangement_Score__c",
+    responseField: "Q5_Risk_Mangement_Response__c"
+  },
+  "q06-model-inventory": {
+    scoreField: "Q06_Model_Lifecycle_Validation_Score__c",
+    responseField: "Q06_Model_Lifecycle_Validation_Respons__c"
+  },
+  "q07-independent-validation": {
+    scoreField: "Q07_Model_Lifecycle_Validation_Score__c",
+    responseField: "Q07_Model_Lifecycle_Validation_Respons__c"
+  },
+  "q08-fairness-testing": {
+    scoreField: "Q08_Ethics_Fairness_Equity_Score__c",
+    responseField: "Q08_Ethics_Fairness_Equity_Response__c"
+  },
+  "q09-human-review-appeals": {
+    scoreField: "Q09_Ethics_Fairness_Equity_Score__c",
+    responseField: "Q09_Ethics_Fairness_Equity_Response__c"
+  },
+  "q10-training-data-governance": {
+    scoreField: "Q10_Data_Governance_for_AI_Score__c",
+    responseField: "Q10_Data_Governance_for_AI_Response__c"
+  },
+  "q11-decision-logging": {
+    scoreField: "Q11_Data_Governance_for_AI_Score__c",
+    responseField: "Q11_Data_Governance_for_AI_Response__c"
+  },
+  "q12-ai-vendor-diligence": {
+    scoreField: "Q12_Vendor_Third_Party_AI_Score__c",
+    responseField: "Q12_Vendor_Third_Party_AI_Response__c"
+  },
+  "q13-public-genai-controls": {
+    scoreField: "Q13_Vendor_Third_Party_AI_Score__c",
+    responseField: "Q13_Vendor_Third_Party_AI_Response__c"
+  },
+  "q14-monitoring-incident-response": {
+    scoreField: "Q14_Monitoring_Incident_Response_Score__c",
+    responseField: "Q14_Monitoring_Incident_Response_Respo__c"
+  }
+};
 
 function isSalesforceConfigured() {
   return (
@@ -264,6 +334,74 @@ function mapAssessmentToSalesforceTask(result: AssessmentResultPayload) {
   };
 }
 
+function truncateSalesforceText(value: string, maxLength: number) {
+  return value.slice(0, maxLength);
+}
+
+function formatAssessmentScoreValue(label: string, value: number) {
+  return `${label} (${value}/5)`;
+}
+
+function buildRawAssessmentResponse(result: AssessmentResultPayload) {
+  const questionsById = new Map<string, (typeof assessmentQuestions)[number]>(
+    assessmentQuestions.map((question) => [question.id, question])
+  );
+
+  return truncateSalesforceText(
+    JSON.stringify(
+      {
+        lead: result.lead,
+        completedAt: result.completedAt,
+        readinessLabel: result.readinessLabel,
+        score: result.score,
+        answers: result.answers.map((answer) => {
+          const question = questionsById.get(answer.questionId);
+
+          return {
+            questionId: answer.questionId,
+            category: question?.category,
+            statement: question?.statement,
+            prompt: question?.prompt,
+            targetScore: question?.targetScore,
+            criticality: question?.criticality,
+            selectedMaturity: answer.label,
+            selectedValue: answer.value,
+            evidence: answer.evidence
+          };
+        })
+      },
+      null,
+      2
+    ),
+    rawResponseFieldMaxLength
+  );
+}
+
+function mapAssessmentToSalesforceRecord(result: AssessmentResultPayload) {
+  const mappedFields = result.answers.reduce<Record<string, string>>((fields, answer) => {
+    const salesforceFields = assessmentQuestionSalesforceFields[answer.questionId];
+
+    if (!salesforceFields) {
+      return fields;
+    }
+
+    return {
+      ...fields,
+      [salesforceFields.scoreField]: formatAssessmentScoreValue(answer.label, answer.value),
+      [salesforceFields.responseField]: truncateSalesforceText(
+        answer.evidence,
+        assessmentResponseFieldMaxLength
+      )
+    };
+  }, {});
+
+  return {
+    ...mappedFields,
+    ...(result.lead?.salesforceLeadId ? { Lead__c: result.lead.salesforceLeadId } : {}),
+    RawResponse__c: buildRawAssessmentResponse(result)
+  };
+}
+
 function getAssessmentPdfTitle(result: AssessmentResultPayload) {
   const companyOrName =
     result.lead?.company ??
@@ -374,6 +512,43 @@ async function uploadPdfToSalesforce({
   return contentDocumentId;
 }
 
+async function createSalesforceAssessmentRecord({
+  token,
+  result
+}: {
+  token: SalesforceTokenResponse;
+  result: AssessmentResultPayload;
+}) {
+  const apiVersion = getApiVersion();
+  const response = await fetch(
+    `${token.instance_url}/services/data/${apiVersion}/sobjects/${aiReadinessAssessmentObject}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token.access_token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(mapAssessmentToSalesforceRecord(result)),
+      cache: "no-store"
+    }
+  );
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(`Salesforce AI readiness assessment creation failed: ${message}`);
+  }
+
+  const assessmentResult = (await response.json()) as SalesforceCreateResponse;
+
+  if (!assessmentResult.success) {
+    throw new Error(
+      `Salesforce AI readiness assessment creation failed: ${JSON.stringify(assessmentResult.errors)}`
+    );
+  }
+
+  return assessmentResult.id;
+}
+
 export async function createSalesforceLead(data: LeadCaptureValues): Promise<SalesforceLeadResult> {
   if (!isSalesforceConfigured()) {
     return { status: "not_configured" };
@@ -436,6 +611,10 @@ export async function createSalesforceAssessmentTask(
 
   const token = await getAccessToken();
   const apiVersion = getApiVersion();
+  const assessmentRecordId = await createSalesforceAssessmentRecord({
+    token,
+    result
+  });
   const response = await fetch(`${token.instance_url}/services/data/${apiVersion}/sobjects/Task`, {
     method: "POST",
     headers: {
@@ -468,6 +647,7 @@ export async function createSalesforceAssessmentTask(
   return {
     status: "created",
     taskId: taskResult.id,
+    assessmentRecordId,
     contentDocumentId
   };
 }

@@ -50,7 +50,6 @@ const fields: Array<{
 
 export function LeadCaptureForm() {
   const router = useRouter();
-  const [leadSnapshot, setLeadSnapshot] = useState<LeadCaptureValues | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const {
     register,
@@ -96,7 +95,6 @@ export function LeadCaptureForm() {
         salesforceLeadId: result.salesforceLeadId
       };
 
-      setLeadSnapshot(leadWithSalesforceId);
       window.sessionStorage.setItem("ai-readiness-lead", JSON.stringify(leadWithSalesforceId));
       router.push("/assessment");
     } catch (error) {

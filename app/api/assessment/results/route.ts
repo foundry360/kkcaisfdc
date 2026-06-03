@@ -9,6 +9,7 @@ type AssessmentResultsApiResponse = {
   ok: boolean;
   mode: "salesforce" | "not_configured";
   salesforceTaskId?: string;
+  salesforceAssessmentRecordId?: string;
   salesforceContentDocumentId?: string;
   message?: string;
 };
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
       ok: true,
       mode: "salesforce",
       salesforceTaskId: salesforceResult.taskId,
+      salesforceAssessmentRecordId: salesforceResult.assessmentRecordId,
       salesforceContentDocumentId: salesforceResult.contentDocumentId
     });
   } catch (error) {
