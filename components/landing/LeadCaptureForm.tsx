@@ -15,34 +15,39 @@ const fields: Array<{
   label: string;
   type: string;
   placeholder: string;
+  required?: boolean;
 }> = [
   {
     name: "firstName",
     label: "First Name",
     type: "text",
-    placeholder: "Avery"
+    placeholder: "Avery",
+    required: true
   },
   {
     name: "lastName",
     label: "Last Name",
     type: "text",
-    placeholder: "Stone"
+    placeholder: "Stone",
+    required: true
   },
   {
     name: "email",
     label: "Email",
     type: "email",
-    placeholder: "avery@company.com"
+    placeholder: "avery@company.com",
+    required: true
   },
   {
     name: "company",
     label: "Company",
     type: "text",
-    placeholder: "Acme Health Partners"
+    placeholder: "Acme Health Partners",
+    required: true
   },
   {
     name: "address",
-    label: "Address",
+    label: "Address (optional)",
     type: "text",
     placeholder: "123 Market Street, San Francisco, CA"
   }
@@ -160,6 +165,8 @@ export function LeadCaptureForm() {
                         message: "Enter a valid email address"
                       }
                     }
+                  : !field.required
+                    ? {}
                   : {
                       required: `${field.label} is required`,
                       minLength: {

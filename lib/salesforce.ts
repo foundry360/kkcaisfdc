@@ -203,9 +203,9 @@ function mapLeadToSalesforce(data: LeadCaptureValues) {
     LastName: data.lastName,
     Email: data.email,
     Company: data.company,
-    Street: data.address,
     LeadSource: process.env.SALESFORCE_LEAD_SOURCE ?? "AI Readiness Assessment",
     Description: "Submitted from the Kona Kai AI Readiness Assessment landing page.",
+    ...(data.address ? { Street: data.address } : {}),
     ...(process.env.SALESFORCE_LEAD_RECORD_TYPE_ID
       ? { RecordTypeId: process.env.SALESFORCE_LEAD_RECORD_TYPE_ID }
       : {})

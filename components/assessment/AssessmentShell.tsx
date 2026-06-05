@@ -513,7 +513,7 @@ export function AssessmentShell() {
                   <p>Name: {lead ? `${lead.firstName} ${lead.lastName}` : "Not captured yet"}</p>
                   <p>Email: {lead?.email ?? "Not captured yet"}</p>
                   <p>Company: {lead?.company ?? "Not captured yet"}</p>
-                  <p>Address: {lead?.address ?? "Not captured yet"}</p>
+                  <p>Address: {lead?.address || "Not captured yet"}</p>
                 </div>
               </div>
 

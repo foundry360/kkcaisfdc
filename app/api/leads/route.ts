@@ -30,9 +30,9 @@ function parseLeadPayload(payload: unknown): LeadCaptureValues {
     address: readString(record.address)
   };
 
-  const missingFields = Object.entries(data)
-    .filter(([, value]) => value.length === 0)
-    .map(([key]) => key);
+  const missingFields = (["firstName", "lastName", "email", "company"] as const).filter(
+    (key) => data[key].length === 0
+  );
 
   if (missingFields.length > 0) {
     throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
