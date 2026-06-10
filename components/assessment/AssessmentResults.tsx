@@ -259,8 +259,11 @@ function getRecommendationLabel(recommendation: string) {
 export function AssessmentResults() {
   const storedResult = useSyncExternalStore(subscribeToResultsStore, getStoredResult, () => null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const result = storedResult ?? sampleResult;
-  const isSampleResult = !storedResult;
+  const isSampleReportRoute =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("sample") === "true";
+  const result = isSampleReportRoute ? sampleResult : storedResult ?? sampleResult;
+  const isSampleResult = isSampleReportRoute || !storedResult;
 
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-8">
@@ -283,12 +286,14 @@ export function AssessmentResults() {
             />
           </a>
           <div className="flex gap-3">
-            <Link
-              href="/assessment"
-              className="rounded-full border border-[#173244]/10 bg-white px-5 py-3 text-sm font-semibold text-[#173244] transition hover:border-[#1BA38E]/45 hover:bg-[#f8fafc]"
-            >
-              Retake assessment
-            </Link>
+            {!isSampleResult ? (
+              <Link
+                href="/assessment"
+                className="rounded-full border border-[#173244]/10 bg-white px-5 py-3 text-sm font-semibold text-[#173244] transition hover:border-[#1BA38E]/45 hover:bg-[#f8fafc]"
+              >
+                Retake assessment
+              </Link>
+            ) : null}
             <Link
               href="/"
               className="rounded-full bg-[#244566] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#315a83]"
