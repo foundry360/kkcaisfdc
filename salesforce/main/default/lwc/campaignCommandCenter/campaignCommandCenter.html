@@ -1,0 +1,212 @@
+<template>
+    <div class="command-center">
+        <section
+            class="campaign-command-banner"
+            style="background: #f3f3f3; border-radius: 0.75rem; color: #181818; padding: 1.25rem;"
+        >
+            <header class="hero">
+                <div>
+                    <h1>
+                        <lightning-icon
+                            icon-name="standard:campaign"
+                            size="small"
+                            class="title-icon"
+                        ></lightning-icon>
+                        <span>Dashboard</span>
+                    </h1>
+                    <p class="subtitle">Monitor campaign performance, member response, status mix, and recent activity.</p>
+                </div>
+            </header>
+
+            <section class="summary">
+                <div class="metric">
+                    <span>Total Campaigns</span>
+                    <strong>{summary.totalCampaigns}</strong>
+                </div>
+                <div class="metric">
+                    <span>Active Campaigns</span>
+                    <strong>{summary.activeCampaigns}</strong>
+                </div>
+                <div class="metric">
+                    <span>Total Members</span>
+                    <strong>{summary.totalMembers}</strong>
+                </div>
+                <div class="metric">
+                    <span>Response Rate</span>
+                    <strong>{summary.responseRate}%</strong>
+                </div>
+                <div class="metric">
+                    <span>Open/Click Rate</span>
+                    <strong>{summary.openClickRate}%</strong>
+                </div>
+            </section>
+        </section>
+
+        <template if:true={errorMessage}>
+            <div class="error-state">{errorMessage}</div>
+        </template>
+
+        <div class="workspace">
+            <main class="main-content">
+                <lightning-card title="Active Campaigns" icon-name="standard:campaign">
+                    <div class="card-body">
+                        <template if:true={hasActiveCampaigns}>
+                            <p class="list-note">Active campaigns from the current search results.</p>
+                            <lightning-datatable
+                                key-field="id"
+                                data={activeCampaignRows}
+                                columns={campaignColumns}
+                                hide-checkbox-column
+                                onrowaction={handleCampaignRowAction}
+                            ></lightning-datatable>
+                        </template>
+                        <template if:false={hasActiveCampaigns}>
+                            <div class="empty-state">No active campaigns match the current search.</div>
+                        </template>
+                    </div>
+                </lightning-card>
+
+                <lightning-card title="Inactive Campaigns" icon-name="standard:campaign">
+                    <div class="card-body">
+                        <template if:true={hasInactiveCampaigns}>
+                            <p class="list-note">Inactive, completed, or paused campaigns from the current search results.</p>
+                            <lightning-datatable
+                                key-field="id"
+                                data={inactiveCampaignRows}
+                                columns={campaignColumns}
+                                hide-checkbox-column
+                                onrowaction={handleCampaignRowAction}
+                            ></lightning-datatable>
+                        </template>
+                        <template if:false={hasInactiveCampaigns}>
+                            <div class="empty-state">No inactive campaigns match the current search.</div>
+                        </template>
+                    </div>
+                </lightning-card>
+            </main>
+
+            <aside class="right-sidebar">
+                <lightning-card title="Campaign Status" icon-name="standard:orders">
+                    <div class="card-body">
+                        <template if:true={hasSelectedCampaign}>
+                            <div class="selected-campaign">
+                                <a href={selectedCampaign.recordUrl} target="_blank">{selectedCampaign.name}</a>
+                                <span>{selectedCampaign.status}</span>
+                            </div>
+                            <dl class="detail-grid">
+                                <div>
+                                    <dt>Type</dt>
+                                    <dd>{selectedCampaign.type}</dd>
+                                </div>
+                                <div>
+                                    <dt>Owner</dt>
+                                    <dd>{selectedCampaign.ownerName}</dd>
+                                </div>
+                                <div>
+                                    <dt>Start Date</dt>
+                                    <dd>{selectedCampaign.startDate}</dd>
+                                </div>
+                                <div>
+                                    <dt>End Date</dt>
+                                    <dd>{selectedCampaign.endDate}</dd>
+                                </div>
+                            </dl>
+                            <section class="mini-metrics">
+                                <div class="mini-metric">
+                                    <span>Members</span>
+                                    <strong>{selectedCampaign.totalMembers}</strong>
+                                </div>
+                                <div class="mini-metric">
+                                    <span>Open / Clicks</span>
+                                    <strong>{selectedCampaign.openedEmails} / {selectedCampaign.clickedEmails}</strong>
+                                </div>
+                                <div class="mini-metric">
+                                    <span>Contacts</span>
+                                    <strong>{selectedCampaign.contactMembers}</strong>
+                                </div>
+                                <div class="mini-metric">
+                                    <span>Leads</span>
+                                    <strong>{selectedCampaign.leadMembers}</strong>
+                                </div>
+                            </section>
+                        </template>
+                        <template if:false={hasSelectedCampaign}>
+                            <div class="empty-state">Select a campaign to view status and activity.</div>
+                        </template>
+                    </div>
+                </lightning-card>
+
+                <lightning-card title="Campaign Status Mix" icon-name="standard:chart">
+                    <div class="card-body">
+                        <template if:true={hasCampaignStatusSegments}>
+                            <div class="donut-layout">
+                                <svg class="donut-chart" viewBox="0 0 42 42" role="img" aria-label="Campaign status mix">
+                                    <circle class="donut-ring" cx="21" cy="21" r="15.9155"></circle>
+                                    <template for:each={campaignStatusSegments} for:item="segment">
+                                        <circle
+                                            key={segment.key}
+                                            class="donut-segment"
+                                            cx="21"
+                                            cy="21"
+                                            r="15.9155"
+                                            stroke={segment.color}
+                                            stroke-dasharray={segment.dashArray}
+                                            stroke-dashoffset={segment.dashOffset}
+                                        ></circle>
+                                    </template>
+                                    <text x="21" y="20" class="donut-total">{summary.totalCampaigns}</text>
+                                    <text x="21" y="25" class="donut-label">Campaigns</text>
+                                </svg>
+                                <div class="donut-legend">
+                                    <template for:each={campaignStatusSegments} for:item="segment">
+                                        <div key={segment.key} class="legend-row">
+                                            <span class="legend-swatch" style={segment.legendStyle}></span>
+                                            <span class="legend-label">{segment.status}</span>
+                                            <strong>{segment.count}</strong>
+                                            <span>{segment.percentage}%</span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                        <template if:false={hasCampaignStatusSegments}>
+                            <div class="empty-state">No campaign status data to chart.</div>
+                        </template>
+                    </div>
+                </lightning-card>
+
+                <lightning-card title="Member Status Breakdown" icon-name="standard:campaign_members">
+                    <div class="card-body">
+                        <template if:true={hasStatusRows}>
+                            <lightning-datatable
+                                key-field="status"
+                                data={statusRows}
+                                columns={statusColumns}
+                                hide-checkbox-column
+                            ></lightning-datatable>
+                        </template>
+                        <template if:false={hasStatusRows}>
+                            <div class="empty-state">No member status data for the selected campaign.</div>
+                        </template>
+                    </div>
+                </lightning-card>
+
+                <lightning-card title="Recent Activity" icon-name="standard:task">
+                    <div class="card-body">
+                        <template if:true={hasActivityRows}>
+                            <lightning-datatable
+                                key-field="id"
+                                data={activityRows}
+                                columns={activityColumns}
+                                hide-checkbox-column
+                            ></lightning-datatable>
+                        </template>
+                        <template if:false={hasActivityRows}>
+                            <div class="empty-state">No recent Tasks or Events for the selected campaign.</div>
+                        </template>
+                    </div>
+                </lightning-card>
+            </aside>
+        </div>
+    </div>
+</template>

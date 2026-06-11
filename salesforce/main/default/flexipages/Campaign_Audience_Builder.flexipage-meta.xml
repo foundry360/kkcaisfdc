@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Build Campaign Members automatically from filtered Contact and Lead audiences.</description>
+    <flexiPageRegions>
+        <itemInstances>
+            <componentInstance>
+                <componentName>campaignAudienceBuilder</componentName>
+                <identifier>c_campaignAudienceBuilder</identifier>
+            </componentInstance>
+        </itemInstances>
+        <name>header</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <flexiPageRegions>
+        <name>main</name>
+        <type>Region</type>
+    </flexiPageRegions>
+    <masterLabel>Campaign Audience Builder</masterLabel>
+    <template>
+        <name>campaignAudienceBuilderTemplate</name>
+    </template>
+    <type>AppPage</type>
+</FlexiPage>

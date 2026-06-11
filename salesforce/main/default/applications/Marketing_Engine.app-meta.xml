@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#1B5299</headerColor>
+        <shouldOverrideOrgTheme>true</shouldOverrideOrgTheme>
+    </brand>
+    <description>Native Salesforce app for marketing planning, Campaign execution, task delivery, Campaign Member tracking, and reporting.</description>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
+    <label>Marketing Engine</label>
+    <navType>Standard</navType>
+    <tabs>Marketing_Command_Center</tabs>
+    <tabs>Campaign_Command_Center</tabs>
+    <tabs>Marketing_Project__c</tabs>
+    <tabs>standard-Campaign</tabs>
+    <tabs>Campaign_Audience_Builder</tabs>
+    <tabs>Campaign_Members</tabs>
+    <tabs>Marketing_Task__c</tabs>
+    <tabs>standard-report</tabs>
+    <tabs>standard-Dashboard</tabs>
+    <uiType>Lightning</uiType>
+</CustomApplication>

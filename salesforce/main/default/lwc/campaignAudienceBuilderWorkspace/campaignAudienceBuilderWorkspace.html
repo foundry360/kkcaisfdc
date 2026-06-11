@@ -1,0 +1,220 @@
+<template>
+    <div class="workspace">
+        <main class="main-content">
+            <template if:true={preview}>
+                <section class="summary">
+                    <div class="metric">
+                        <span>Eligible Contacts</span>
+                        <strong>{preview.eligibleContacts}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Eligible Leads</span>
+                        <strong>{preview.eligibleLeads}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Total Eligible</span>
+                        <strong>{preview.eligibleTotal}</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Already in Campaign</span>
+                        <strong>{existingTotal}</strong>
+                    </div>
+                </section>
+
+                <template if:true={preview.willCapResults}>
+                    <div class="notice">
+                        Audience is larger than the selected maximum. Build will add newest matches first, up to
+                        {preview.maxRecords}.
+                    </div>
+                </template>
+            </template>
+
+            <lightning-card title="Eligible Campaign Members" icon-name="standard:groups">
+                <div class="eligible-list">
+                    <template if:true={hasExclusions}>
+                        <div class="exclusion-bar">
+                            <span>{excludedTotal} selected people are excluded from this build.</span>
+                            <lightning-button
+                                label="Clear Exclusions"
+                                variant="base"
+                                onclick={handleClearExclusions}
+                            ></lightning-button>
+                        </div>
+                    </template>
+                    <template if:true={hasRows}>
+                        <p class="list-note">
+                            Showing up to 200 eligible Contacts and Leads. Use Build Campaign to add up to the
+                            selected maximum. Click Exclude to skip individual people from this build.
+                        </p>
+                        <lightning-datatable
+                            key-field="id"
+                            data={rows}
+                            columns={columns}
+                            hide-checkbox-column
+                            onrowaction={handleRowAction}
+                        ></lightning-datatable>
+                    </template>
+
+                    <template if:false={hasRows}>
+                        <template if:true={hasPreviewed}>
+                            <div class="empty-state">No eligible Contacts or Leads match the current filters.</div>
+                        </template>
+                        <template if:false={hasPreviewed}>
+                            <div class="empty-state">
+                                Choose a Campaign and filters in the Audience Builder sidebar, then click Preview Audience.
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </lightning-card>
+        </main>
+
+        <aside class="right-sidebar">
+            <lightning-card title="Audience Builder" icon-name="standard:campaign">
+                <div class="builder-sidebar">
+                    <section class="section search-row">
+                        <lightning-input
+                            type="search"
+                            label="Search Campaigns"
+                            value={campaignSearchTerm}
+                            onchange={handleCampaignSearchTermChange}
+                            onkeydown={handleCampaignSearchKeydown}
+                            class="search-input"
+                        ></lightning-input>
+                        <lightning-button
+                            label="Search"
+                            variant="neutral"
+                            onclick={loadCampaigns}
+                            class="search-button"
+                        ></lightning-button>
+                    </section>
+
+                    <section class="section">
+                        <lightning-combobox
+                            name="campaignId"
+                            label="Campaign"
+                            value={criteria.campaignId}
+                            options={campaignOptions}
+                            onchange={handleCriteriaChange}
+                            required
+                        ></lightning-combobox>
+
+                        <lightning-combobox
+                            name="memberStatus"
+                            label="Campaign Member Status"
+                            value={criteria.memberStatus}
+                            options={memberStatusOptions}
+                            onchange={handleCriteriaChange}
+                        ></lightning-combobox>
+                    </section>
+
+                    <section class="section">
+                        <lightning-dual-listbox
+                            name="industries"
+                            label="Industries"
+                            source-label="Available"
+                            selected-label="Selected"
+                            value={criteria.industries}
+                            options={industryOptions}
+                            onchange={handleCriteriaChange}
+                            field-level-help="Select one or more industries. Leave blank to include all industries."
+                        ></lightning-dual-listbox>
+
+                        <lightning-input
+                            name="state"
+                            label="State"
+                            value={criteria.state}
+                            onchange={handleCriteriaChange}
+                            placeholder="CA"
+                        ></lightning-input>
+
+                        <lightning-input
+                            name="title"
+                            label="Title Contains"
+                            value={criteria.title}
+                            onchange={handleCriteriaChange}
+                            placeholder="Compliance"
+                        ></lightning-input>
+
+                        <lightning-input
+                            name="emailDomain"
+                            label="Email Domain"
+                            value={criteria.emailDomain}
+                            onchange={handleCriteriaChange}
+                            placeholder="example.com"
+                        ></lightning-input>
+
+                        <lightning-input
+                            name="companyName"
+                            label="Company or Account Contains"
+                            value={criteria.companyName}
+                            onchange={handleCriteriaChange}
+                            placeholder="Kona"
+                        ></lightning-input>
+                    </section>
+
+                    <section class="section">
+                        <lightning-input
+                            name="maxRecords"
+                            type="number"
+                            label="Maximum Members to Add"
+                            value={criteria.maxRecords}
+                            min="1"
+                            max="5000"
+                            onchange={handleCriteriaChange}
+                        ></lightning-input>
+                    </section>
+
+                    <section class="source-options checkbox-row">
+                        <lightning-input
+                            name="includeContacts"
+                            type="checkbox"
+                            label="Include Contacts"
+                            checked={criteria.includeContacts}
+                            onchange={handleCriteriaChange}
+                        ></lightning-input>
+                        <lightning-input
+                            name="includeLeads"
+                            type="checkbox"
+                            label="Include Leads"
+                            checked={criteria.includeLeads}
+                            onchange={handleCriteriaChange}
+                        ></lightning-input>
+                        <lightning-input
+                            name="excludeEmailOptOut"
+                            type="checkbox"
+                            label="Exclude Email Opt Out"
+                            checked={criteria.excludeEmailOptOut}
+                            onchange={handleCriteriaChange}
+                        ></lightning-input>
+                    </section>
+
+                    <section class="actions action-row">
+                        <lightning-button
+                            label="Preview Audience"
+                            variant="neutral"
+                            onclick={handlePreview}
+                            disabled={disablePreview}
+                            class="action-button"
+                        ></lightning-button>
+                        <lightning-button
+                            label="Build Campaign"
+                            variant="brand"
+                            onclick={handleBuild}
+                            disabled={disableBuild}
+                            class="action-button"
+                        ></lightning-button>
+                    </section>
+
+                    <template if:true={result}>
+                        <div class="result">{result.message}</div>
+                    </template>
+
+                    <template if:true={errorMessage}>
+                        <div class="error-state">{errorMessage}</div>
+                    </template>
+                </div>
+            </lightning-card>
+        </aside>
+    </div>
+</template>
